@@ -2,14 +2,10 @@
 
 import {
   ChangeEvent,
-  Dispatch,
-  KeyboardEvent,
-  SetStateAction,
   useEffect,
   useRef,
   useState,
 } from "react";
-
 import { useRouter } from "next/navigation";
 
 interface Props {
@@ -39,10 +35,11 @@ export default ({ query }: Props) => {
     try {
       const url = `?q=${encodeURIComponent(question)}`;
       console.log("query url", url);
-      router.push(url);
-      setInputDisabled(true);
+      await router.push(url);
+      setInputDisabled(true); // Disable input after navigation
     } catch (e) {
       console.log("search failed: ", e);
+      setInputDisabled(false);
     }
   };
 
@@ -53,8 +50,18 @@ export default ({ query }: Props) => {
     }
   }, [query]);
 
+  useEffect(() => {
+    const handleRouteChange = () => {
+      setInputDisabled(false); // Re-enable input after route change
+    };
+    router.events.on('routeChangeComplete', handleRouteChange);
+    return () => {
+      router.events.off('routeChangeComplete', handleRouteChange);
+    };
+  }, []);
+
   return (
-    <section className="relatve mt-4 md:mt-8">
+    <section className="relative mt-4 md:mt-8">
       <div className="mx-auto w-full max-w-2xl px-6 text-center">
         <form
           method="POST"
